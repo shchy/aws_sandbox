@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  ECacheMemd:
+    Type: "AWS::ElastiCache::CacheCluster"
+    Properties:
+      CacheNodeType: cache.t2.micro
+      CacheSecurityGroupNames:
+        - !Ref MemCacheSecurityGroup
+      ClusterName: memcached-cluster-01
+      Engine: memcached
+      NumCacheNodes: 2
+      Port: 11211
+      PreferredMaintenanceWindow: "sun:17:00-sun:20:00"
+  MemCacheSecurityGroup:
+    Type: AWS::ElastiCache::SecurityGroup
+    Properties:
+      Description: MemCacheSG
+  MemCacheSecurityGroupIngress:
+    Type: AWS::ElastiCache::SecurityGroupIngress
+    Properties:
+      CacheSecurityGroupName: !Ref MemCacheSecurityGroup
+      EC2SecurityGroupName: !Ref InstanceSecurityGroup
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MemCacheSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "11211"
+          ToPort: "11211"
+          CidrIp: "0.0.0.0/0"

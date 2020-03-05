@@ -1,0 +1,66 @@
+環境構築:
+    - https://qiita.com/reflet/items/e4225435fe692663b705
+    - pythonインストール
+    - pipのパスを通す
+    - awscliインストール
+    - awscliのパスを通す
+        - %AppData%\Python\Scripts
+    - awscliに認証情報を設定
+        - aws configure
+        - https://qiita.com/sugimount/items/f1eefd0e901d8e35df91
+CFn:
+    - https://qiita.com/kei_q/items/6d5cc4563c232f5b785a
+    作成コマンド:
+    aws cloudformation create-stack --template-body file://./test.yml --stack-name test-ec2 --capabilities CAPABILITY_NAMED_IAM
+    # lambda のRole作るときはこのオプションを付けるらしい --capabilities CAPABILITY_NAMED_IAM
+    https://blog.websandbag.com/entry/2017/12/30/234729
+    変更コマンド:
+    aws cloudformation create-change-set \
+        --stack-name test-ec2 \
+        --template-body file://./test.yml \
+        --change-set-name add-launch-config
+    削除コマンド:
+    aws cloudformation delete-stack --stack-name test-ec2
+    memo:
+        - json とyaml 形式の変換 pip cfn_flip
+対象:
+    Elasticache:
+        - インメモリdb
+        ☐ 構築はできた
+        ☐ 動かすサンプルはまだだけど、なんかそれっぽいグラフは出る
+    NLB:
+        - 低層のLB
+    ELB（CLB）:
+        - RP
+        ☐ 構築はできた
+        ☐ でもアクセスが無いのであんまそれっぽいのが出ない
+        - https://s3-us-west-2.amazonaws.com/cloudformation-templates-us-west-2/EC2InstanceWithSecurityGroupSample.template
+            - Regionでamiを分岐できるサンプル
+    SQS:
+        - キュー
+        ☐ あああ
+        ☐ 
+    Kinesis:
+        kds: 
+            - データ突っ込んでlambdaで分析
+            ☐ あああ
+        kdf: 
+            - 指定データをtailしてs3とかに格納	
+            ☐ あああ
+    ECS:
+        - コンテナ
+        ☐ あああ
+    SES: 
+        - メール
+        ☐ あああ
+    StepFunctions: 
+        - ノードlambda
+        ☐ あああ
+    EFS: 
+        - NFS
+        ☐ あああ
+    Batch: 
+        - 処理を指定したリソースで実行してくれるやつ
+        ☐ あああ
+
+
