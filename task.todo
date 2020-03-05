@@ -22,9 +22,13 @@ CFn:
         --change-set-name add-launch-config
     削除コマンド:
     aws cloudformation delete-stack --stack-name test-ec2
+    Package:
+    aws cloudformation package --template-file in-vpc.yml --s3-bucket mackerel-bucket --output-template-file in-vpc-packed.yml
     memo:
         - json とyaml 形式の変換 pip cfn_flip
         - yamlに日本語コメント書くにはSJISじゃないとエラー出る
+        - sshKey mackerel-test は手動で作る
+        - 多分ECRも手動で作る
 対象:
     Elasticache:
         - インメモリdb

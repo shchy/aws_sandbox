@@ -1,20 +1,156 @@
 AWSTemplateFormatVersion: "2010-09-09"
-# 各リソースが参照する変数
 Parameters:
-  # 各リソース名のプレフィクスに使用する名前
   projectName:
     Type: String
     Default: test
     Description: "Resource prefix"
     AllowedPattern: "^[a-zA-Z][a-zA-Z0-9]*"
   # ssh-key
-  # 別途作成しておく必要がある
   eC2KeyPair:
     Type: AWS::EC2::KeyPair::KeyName
     Default: "mackerel-test"
-# リソースの定義
 Resources:
-  # lambda用のロールを作成
+  vpc:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-vpc
+  internetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-igw
+  igwAttachVpc:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref internetGateway
+      VpcId: !Ref vpc
+  publicSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1a"
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-subnet01
+  publicSubnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1c"
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-subnet02
+  privateSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1a"
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-private-subnet01
+  publicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-rtb
+  privateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-private-rtb
+
+  routeAddInternet:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref internetGateway
+      RouteTableId: !Ref publicRouteTable
+
+  associatePublicSubnet1ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      SubnetId: !Ref publicSubnet1
+
+  associatePublicSubnet2ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      SubnetId: !Ref publicSubnet2
+
+  associatePrivateSubnet1ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref privateRouteTable
+      SubnetId: !Ref privateSubnet1
+
+  publicAlbSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-public-alb-sg
+      GroupDescription: !Sub ${projectName}-public-alb-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-alb-sg
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+
+  publicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${projectName}-public-alb
+      Scheme: internet-facing
+      Subnets:
+        - !Ref publicSubnet1
+        - !Ref publicSubnet2
+      SecurityGroups:
+        - !Ref publicAlbSecuritygroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-alb
+
+  publicLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${projectName}-public-trg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-trg
+      TargetType: lambda
+      Targets:
+        - Id: !GetAtt vpcLambda.Arn
+
+  publicLoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref publicLoadBalancerTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref publicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
   iamRole1:
     Type: "AWS::IAM::Role"
     Properties:
@@ -31,107 +167,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       RoleName: !Sub ${projectName}-lambda-role
-  # vpcを作成
-  vpc:
-    Type: "AWS::EC2::VPC"
-    Properties:
-      CidrBlock: 10.0.0.0/16
-      EnableDnsSupport: "true"
-      EnableDnsHostnames: "true"
-      InstanceTenancy: default
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-vpc
-  # インターネットゲートウェイを作成
-  internetGateway:
-    Type: "AWS::EC2::InternetGateway"
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-igw
-  # VPCとIGWをくっつける
-  igwAttachVpc:
-    Type: "AWS::EC2::VPCGatewayAttachment"
-    Properties:
-      InternetGatewayId: !Ref internetGateway
-      VpcId: !Ref vpc
-  # サブネット1を作成（インターネット公開リソース所属用）
-  publicSubnet1:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1a"
-      CidrBlock: 10.0.0.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-subnet01
-  # サブネット3を作成（インターネット公開リソース所属用）
-  publicSubnet2:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1c"
-      CidrBlock: 10.0.1.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-subnet02
-  # サブネット2を作成（インターネット非公開リソース所属用）
-  privateSubnet1:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1a"
-      CidrBlock: 10.0.2.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-subnet01
-  # ルートテーブル1を作成（インターネット公開リソース所属用）
-  publicRouteTable:
-    Type: "AWS::EC2::RouteTable"
-    Properties:
-      VpcId: !Ref vpc
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-rtb
-  # ルートテーブル2を作成（インターネット非公開リソース所属用）
-  privateRouteTable:
-    Type: "AWS::EC2::RouteTable"
-    Properties:
-      VpcId: !Ref vpc
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-rtb
 
-  # ルートテーブル1とIGWをくっつける
-  routeAddInternet:
-    Type: "AWS::EC2::Route"
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref internetGateway
-      RouteTableId: !Ref publicRouteTable
-  # ルートテーブル1とサブネット1をくっつける
-  associatePublicSubnet1ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref publicRouteTable
-      SubnetId: !Ref publicSubnet1
-  # ルートテーブル1とサブネット3をくっつける
-  associatePublicSubnet2ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref publicRouteTable
-      SubnetId: !Ref publicSubnet2
-  # ルートテーブル2とサブネット2をくっつける
-  associatePrivateSubnet1ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref privateRouteTable
-      SubnetId: !Ref privateSubnet1
-
-  # lambda用ファイアーウォールを作成
   lambdaSecuritygroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -141,70 +177,12 @@ Resources:
         - Key: Name
           Value: !Sub ${projectName}-lambda-sg
       VpcId: !Ref vpc
-  # 公開ALB用ファイアーウォールを作成
-  publicAlbSecuritygroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${projectName}-public-alb-sg
-      GroupDescription: !Sub ${projectName}-public-alb-sg
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-alb-sg
-      VpcId: !Ref vpc
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: "80"
-          ToPort: "80"
-          CidrIp: "0.0.0.0/0"
-  # 公開用ALB作成
-  publicLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Name: !Sub ${projectName}-public-alb
-      Scheme: internet-facing
-      Subnets:
-        - !Ref publicSubnet1
-        - !Ref publicSubnet2
-      SecurityGroups:
-        - !Ref publicAlbSecuritygroup
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-alb
-  # 公開用ALBの対象を指定
-  publicLoadBalancerTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: !Sub ${projectName}-public-trg
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-public-trg
-      TargetType: lambda
-      Targets:
-        - Id: !GetAtt vpcLambda.Arn
-  # 公開用ALBと対象を紐づけ
-  publicLoadBalancerListener:
-    Type: "AWS::ElasticLoadBalancingV2::Listener"
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref publicLoadBalancerTargetGroup
-          Type: forward
-      LoadBalancerArn: !Ref publicLoadBalancer
-      Port: 80
-      Protocol: HTTP
 
-  # Lambda作成
   vpcLambda:
     Type: "AWS::Lambda::Function"
     Properties:
       FunctionName: !Sub ${projectName}-Function
-      Code:
-        ZipFile: |
-          import json
-          def lambda_handler(event, context):
-              return {
-                  'statusCode': 200,
-                  'body': json.dumps('Hello from Lambda!')
-              }
+      Code: hello_lambda
       Handler: index.lambda_handler
       Role: !GetAtt iamRole1.Arn
       Runtime: python3.7
@@ -213,7 +191,7 @@ Resources:
           - !Ref lambdaSecuritygroup
         SubnetIds:
           - !Ref privateSubnet1
-  # Lambdaのパーミッション作成
+
   vpcLambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -221,7 +199,6 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: elasticloadbalancing.amazonaws.com
 
-  # ssh用ファイアーウォールを作成
   ec2Securitygroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -236,7 +213,7 @@ Resources:
           FromPort: "22"
           ToPort: "22"
           CidrIp: "0.0.0.0/0"
-  # 踏み台マシンを作成
+
   eC2:
     Type: "AWS::EC2::Instance"
     Properties:
