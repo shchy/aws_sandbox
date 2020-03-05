@@ -10,6 +10,7 @@
         - https://qiita.com/sugimount/items/f1eefd0e901d8e35df91
 CFn:
     - https://qiita.com/kei_q/items/6d5cc4563c232f5b785a
+    - https://qiita.com/yasuhiroki/items/8463eed1c78123313a6f
     作成コマンド:
     aws cloudformation create-stack --template-body file://./test.yml --stack-name test-ec2 --capabilities CAPABILITY_NAMED_IAM
     # lambda のRole作るときはこのオプションを付けるらしい --capabilities CAPABILITY_NAMED_IAM
@@ -23,6 +24,7 @@ CFn:
     aws cloudformation delete-stack --stack-name test-ec2
     memo:
         - json とyaml 形式の変換 pip cfn_flip
+        - yamlに日本語コメント書くにはSJISじゃないとエラー出る
 対象:
     Elasticache:
         - インメモリdb

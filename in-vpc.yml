@@ -66,7 +66,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-public-subnet01
-  # サブネット2を作成（インターネット公開リソース所属用）
+  # サブネット3を作成（インターネット公開リソース所属用）
   publicSubnet2:
     Type: "AWS::EC2::Subnet"
     Properties:
@@ -77,7 +77,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-public-subnet02
-  # サブネット3を作成（インターネット非公開リソース所属用）
+  # サブネット2を作成（インターネット非公開リソース所属用）
   privateSubnet1:
     Type: "AWS::EC2::Subnet"
     Properties:
@@ -88,39 +88,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-private-subnet01
-  # サブネット4を作成（インターネット非公開リソース所属用）
-  privateSubnet2:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1c"
-      CidrBlock: 10.0.3.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-subnet02
-  # サブネット5を作成（インターネット非公開リソース所属用）
-  privateSubnet3:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1a"
-      CidrBlock: 10.0.4.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-subnet03
-  # サブネット6を作成（インターネット非公開リソース所属用）
-  privateSubnet4:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1c"
-      CidrBlock: 10.0.5.0/24
-      MapPublicIpOnLaunch: "true"
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-subnet04
   # ルートテーブル1を作成（インターネット公開リソース所属用）
   publicRouteTable:
     Type: "AWS::EC2::RouteTable"
@@ -129,6 +96,15 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-public-rtb
+  # ルートテーブル2を作成（インターネット非公開リソース所属用）
+  privateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-private-rtb
+
   # ルートテーブル1とIGWをくっつける
   routeAddInternet:
     Type: "AWS::EC2::Route"
@@ -142,59 +118,19 @@ Resources:
     Properties:
       RouteTableId: !Ref publicRouteTable
       SubnetId: !Ref publicSubnet1
-  # ルートテーブル1とサブネット2をくっつける
+  # ルートテーブル1とサブネット3をくっつける
   associatePublicSubnet2ToPublicRouteTable:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       RouteTableId: !Ref publicRouteTable
       SubnetId: !Ref publicSubnet2
-  # ルートテーブル2を作成（インターネット非公開リソース所属用）
-  privateRouteTable:
-    Type: "AWS::EC2::RouteTable"
-    Properties:
-      VpcId: !Ref vpc
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-rtb
-  # ルートテーブル2とサブネット3をくっつける
+  # ルートテーブル2とサブネット2をくっつける
   associatePrivateSubnet1ToPublicRouteTable:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       RouteTableId: !Ref privateRouteTable
       SubnetId: !Ref privateSubnet1
-  # ルートテーブル2とサブネット4をくっつける
-  associatePrivateSubnet2ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref privateRouteTable
-      SubnetId: !Ref privateSubnet2
-  # ルートテーブル2とサブネット5をくっつける
-  associatePrivateSubnet3ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref privateRouteTable
-      SubnetId: !Ref privateSubnet3
-  # ルートテーブル2とサブネット6をくっつける
-  associatePrivateSubnet4ToPublicRouteTable:
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      RouteTableId: !Ref privateRouteTable
-      SubnetId: !Ref privateSubnet4
-  # ssh用ファイアーウォールを作成
-  ec2Securitygroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${projectName}-ec2-sg
-      GroupDescription: !Sub ${projectName}-ec2-sg
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-ec2-sg
-      VpcId: !Ref vpc
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: "22"
-          ToPort: "22"
-          CidrIp: "0.0.0.0/0"
+
   # lambda用ファイアーウォールを作成
   lambdaSecuritygroup:
     Type: AWS::EC2::SecurityGroup
@@ -220,50 +156,6 @@ Resources:
           FromPort: "80"
           ToPort: "80"
           CidrIp: "0.0.0.0/0"
-  # 非公開ALB用ファイアーウォールを作成
-  privateAlbSecuritygroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${projectName}-private-alb-sg
-      GroupDescription: !Sub ${projectName}-private-alb-sg
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-alb-sg
-      VpcId: !Ref vpc
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: "80"
-          ToPort: "80"
-          CidrIp: "0.0.0.0/0"
-  # Lambda作成
-  vpcLambda:
-    Type: "AWS::Lambda::Function"
-    Properties:
-      FunctionName: !Sub ${projectName}-Function
-      Code:
-        ZipFile: |
-          import json
-          def lambda_handler(event, context):
-              return {
-                  'statusCode': 200,
-                  'body': json.dumps('Hello from Lambda!')
-              }
-      Handler: index.lambda_handler
-      Role: !GetAtt iamRole1.Arn
-      Runtime: python3.7
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref lambdaSecuritygroup
-        SubnetIds:
-          - !Ref privateSubnet3
-          - !Ref privateSubnet4
-  # Lambdaのパーミッション作成
-  vpcLambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt vpcLambda.Arn
-      Action: "lambda:InvokeFunction"
-      Principal: elasticloadbalancing.amazonaws.com
   # 公開用ALB作成
   publicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -299,52 +191,62 @@ Resources:
       LoadBalancerArn: !Ref publicLoadBalancer
       Port: 80
       Protocol: HTTP
-  # 非公開用ALB作成
-  privateLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+
+  # Lambda作成
+  vpcLambda:
+    Type: "AWS::Lambda::Function"
     Properties:
-      Name: !Sub ${projectName}-private-alb
-      Scheme: internal
-      Subnets:
-        - !Ref privateSubnet1
-        - !Ref privateSubnet2
-      SecurityGroups:
-        - !Ref privateAlbSecuritygroup
+      FunctionName: !Sub ${projectName}-Function
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello from Lambda!')
+              }
+      Handler: index.lambda_handler
+      Role: !GetAtt iamRole1.Arn
+      Runtime: python3.7
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref lambdaSecuritygroup
+        SubnetIds:
+          - !Ref privateSubnet1
+  # Lambdaのパーミッション作成
+  vpcLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt vpcLambda.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: elasticloadbalancing.amazonaws.com
+
+  # ssh用ファイアーウォールを作成
+  ec2Securitygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-ec2-sg
+      GroupDescription: !Sub ${projectName}-ec2-sg
       Tags:
         - Key: Name
-          Value: !Sub ${projectName}-private-alb
-  # 非公開用ALBの対象を指定
-  privateLoadBalancerTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: !Sub ${projectName}-private-trg
-      Tags:
-        - Key: Name
-          Value: !Sub ${projectName}-private-trg
-      TargetType: lambda
-      Targets:
-        - Id: !GetAtt vpcLambda.Arn
-  # 非公開用ALBと対象を紐づけ
-  privateLoadBalancerListener:
-    Type: "AWS::ElasticLoadBalancingV2::Listener"
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref privateLoadBalancerTargetGroup
-          Type: forward
-      LoadBalancerArn: !Ref privateLoadBalancer
-      Port: 80
-      Protocol: HTTP
+          Value: !Sub ${projectName}-ec2-sg
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
   # 踏み台マシンを作成
   eC2:
     Type: "AWS::EC2::Instance"
     Properties:
-      AvailabilityZone: ap-southeast-1c
+      AvailabilityZone: ap-southeast-1a
       ImageId: ami-e90dc68a
       InstanceType: t2.micro
       KeyName: !Ref eC2KeyPair
       SecurityGroupIds:
         - !Ref ec2Securitygroup
-      SubnetId: !Ref publicSubnet2
+      SubnetId: !Ref publicSubnet1
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-ec2
