@@ -36,6 +36,8 @@ CFn:
         ☐ でもアクセスが無いのであんまそれっぽいのが出ない
         - https://s3-us-west-2.amazonaws.com/cloudformation-templates-us-west-2/EC2InstanceWithSecurityGroupSample.template
             - Regionでamiを分岐できるサンプル
+        - https://dev.classmethod.jp/cloud/aws/vpc-lambda-alb/
+            - vpc内にWebを配置するサンプル
     SQS:
         - キュー
         ☐ あああ
