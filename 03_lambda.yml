@@ -112,7 +112,4 @@ Resources:
 Outputs:
   LambdaURL:
     Description: ALB DNS
-    Value: !Join
-      - ""
-      - - http://
-        - !GetAtt "publicLoadBalancer.DNSName"
+    Value: !Sub http://${publicLoadBalancer.DNSName}

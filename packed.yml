@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Mackerel Example Stacks
+
+Parameters:
+  projectName:
+    Type: String
+    Default: mackerel
+    Description: Resource prefix
+    AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
+  # ssh-key
+  eC2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: mackerel-key
+
+Resources:
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/4a80c3b47a37057dfea8b0dc8b3dcb8a.template
+      Parameters:
+        projectName:
+
+          Ref: projectName
+  SSHGate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/8c1b70e68e6d7ae4bdeecf394b2434db.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        eC2KeyPair:
+          Ref: eC2KeyPair
+        publicSubnet:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+  Lambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/2957393674c2d0521bb79d0d876e593c.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+  ECS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/238c93ac78d70f71facb190d8dd5062f.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+Outputs:
+  SSHGateIP:
+    Value:
+      Fn::GetAtt:
+      - SSHGate
+      - Outputs.SSHGateIP
+  LambdaURL:
+    Value:
+      Fn::GetAtt:
+      - Lambda
+      - Outputs.LambdaURL
+  NginxURL:
+    Value:
+      Fn::GetAtt:
+      - ECS
+      - Outputs.NginxURL

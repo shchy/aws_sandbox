@@ -12,19 +12,20 @@ CFn:
     - https://qiita.com/kei_q/items/6d5cc4563c232f5b785a
     - https://qiita.com/yasuhiroki/items/8463eed1c78123313a6f
     Package:
-    aws cloudformation package --template-file main.yml --s3-bucket mackerel-bucket --output-template-file main-packed.yml
+    aws cloudformation package --template-file 00_main.yml --s3-bucket mackerel-bucket --output-template-file packed.yml
     作成コマンド:
-    aws cloudformation create-stack --template-body file://main-packed.yml --stack-name mackerel --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation create-stack --template-body file://packed.yml --stack-name mackerel --capabilities CAPABILITY_NAMED_IAM
     # lambda のRole作るときはこのオプションを付けるらしい --capabilities CAPABILITY_NAMED_IAM
     https://blog.websandbag.com/entry/2017/12/30/234729
     変更コマンド:
-    aws cloudformation create-change-set --stack-name mackerel --template-body file://main-packed.yml --change-set-name c-202003062030 --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation create-change-set --stack-name mackerel --template-body file://packed.yml --change-set-name c-202003062030 --capabilities CAPABILITY_NAMED_IAM
     削除コマンド:
-    aws cloudformation delete-stack --stack-name test-ec2
+    aws cloudformation delete-stack --stack-name mackerel
     memo:
         - json とyaml 形式の変換 pip install cfn_flip cfn-flip a.json a.yml
         - yamlに日本語コメント書くにはSJISじゃないとエラー出る
         - sshKey mackerel-test は手動で作る
+        - packingに使うS3Bucketも手動で作る
         - 多分ECRも手動で作る
         - nest
             - https://qiita.com/tyoshitake/items/ff08855d629ba4097125
@@ -58,6 +59,7 @@ CFn:
         - コンテナ
         - https://labs.septeni.co.jp/entry/2016/04/05/105249
         - https://www.sambaiz.net/article/247/
+        - https://github.com/awslabs/ecs-refarch-continuous-deployment
         ☐ 構築はできた
     SES: 
         - メール
