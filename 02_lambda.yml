@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  projectName:
+    Type: String
+  vpc:
+    Type: String
+  publicSubnet1:
+    Type: String
+  publicSubnet2:
+    Type: String
+  privateSubnet1:
+    Type: String
+Resources:
+  publicAlbSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-public-alb-sg
+      GroupDescription: !Sub ${projectName}-public-alb-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-alb-sg
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+
+  publicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${projectName}-public-alb
+      Scheme: internet-facing
+      Subnets:
+        - !Ref publicSubnet1
+        - !Ref publicSubnet2
+      SecurityGroups:
+        - !Ref publicAlbSecuritygroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-alb
+
+  publicLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${projectName}-public-trg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-trg
+      TargetType: lambda
+      Targets:
+        - Id: !GetAtt vpcLambda.Arn
+
+  publicLoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref publicLoadBalancerTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref publicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  iamRole1:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      RoleName: !Sub ${projectName}-lambda-role
+
+  lambdaSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-lambda-sg
+      GroupDescription: !Sub ${projectName}-lambda-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-lambda-sg
+      VpcId: !Ref vpc
+
+  vpcLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ${projectName}-Function
+      Code: hello_lambda
+      Handler: index.lambda_handler
+      Role: !GetAtt iamRole1.Arn
+      Runtime: python3.7
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref lambdaSecuritygroup
+        SubnetIds:
+          - !Ref privateSubnet1
+
+  vpcLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt vpcLambda.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: elasticloadbalancing.amazonaws.com
+
+Outputs:
+  LambdaURL:
+    Description: ALB DNS
+    Value: !Join
+      - ""
+      - - http://
+        - !GetAtt "publicLoadBalancer.DNSName"

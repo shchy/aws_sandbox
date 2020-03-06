@@ -12,13 +12,13 @@ CFn:
     - https://qiita.com/kei_q/items/6d5cc4563c232f5b785a
     - https://qiita.com/yasuhiroki/items/8463eed1c78123313a6f
     Package:
-    aws cloudformation package --template-file in-vpc.yml --s3-bucket mackerel-bucket --output-template-file in-vpc-packed.yml
+    aws cloudformation package --template-file main.yml --s3-bucket mackerel-bucket --output-template-file main-packed.yml
     作成コマンド:
-    aws cloudformation create-stack --template-body file://in-vpc-packed.yml --stack-name invpc --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation create-stack --template-body file://main-packed.yml --stack-name mackerel --capabilities CAPABILITY_NAMED_IAM
     # lambda のRole作るときはこのオプションを付けるらしい --capabilities CAPABILITY_NAMED_IAM
     https://blog.websandbag.com/entry/2017/12/30/234729
     変更コマンド:
-    aws cloudformation create-change-set --stack-name invpc --template-body file://in-vpc-packed.yml --change-set-name c-202003061440 --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation create-change-set --stack-name mackerel --template-body file://main-packed.yml --change-set-name c-202003062030 --capabilities CAPABILITY_NAMED_IAM
     削除コマンド:
     aws cloudformation delete-stack --stack-name test-ec2
     memo:
@@ -26,6 +26,8 @@ CFn:
         - yamlに日本語コメント書くにはSJISじゃないとエラー出る
         - sshKey mackerel-test は手動で作る
         - 多分ECRも手動で作る
+        - nest
+            - https://qiita.com/tyoshitake/items/ff08855d629ba4097125
 対象:
     Elasticache:
         - インメモリdb
@@ -56,7 +58,7 @@ CFn:
         - コンテナ
         - https://labs.septeni.co.jp/entry/2016/04/05/105249
         - https://www.sambaiz.net/article/247/
-        ☐ あああ
+        ☐ 構築はできた
     SES: 
         - メール
         ☐ あああ

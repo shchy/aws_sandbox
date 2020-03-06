@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  projectName:
+    Type: String
+  vpc:
+    Type: String
+  # ssh-key
+  eC2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+  publicSubnet:
+    Type: String
+
+Resources:
+  ec2Securitygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-ec2-sg
+      GroupDescription: !Sub ${projectName}-ec2-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-ec2-sg
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+
+  sshGate:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      AvailabilityZone: ap-southeast-1a
+      ImageId: ami-e90dc68a
+      InstanceType: t2.micro
+      KeyName: !Ref eC2KeyPair
+      SecurityGroupIds:
+        - !Ref ec2Securitygroup
+      SubnetId: !Ref publicSubnet
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-ec2
+Outputs:
+  SSHGateIP:
+    Value: !GetAtt sshGate.PublicIp

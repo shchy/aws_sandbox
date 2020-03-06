@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  projectName:
+    Type: String
+Resources:
+  vpc:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-vpc
+  internetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-igw
+  igwAttachVpc:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref internetGateway
+      VpcId: !Ref vpc
+  publicSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1a"
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-subnet01
+  publicSubnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1c"
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-subnet02
+  privateSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref vpc
+      AvailabilityZone: "ap-southeast-1a"
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: "true"
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-private-subnet01
+  publicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-public-rtb
+  privateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-private-rtb
+
+  associatePublicSubnet1ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      SubnetId: !Ref publicSubnet1
+
+  associatePublicSubnet2ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      SubnetId: !Ref publicSubnet2
+
+  associatePrivateSubnet1ToPublicRouteTable:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref privateRouteTable
+      SubnetId: !Ref privateSubnet1
+
+  routeAddInternet:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref internetGateway
+      RouteTableId: !Ref publicRouteTable
+
+Outputs:
+  vpc:
+    Value: !Ref vpc
+  publicSubnet1:
+    Value: !Ref publicSubnet1
+  publicSubnet2:
+    Value: !Ref publicSubnet2
+  privateSubnet1:
+    Value: !Ref privateSubnet1
