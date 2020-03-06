@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ecs task stack
+Parameters:
+  Cluster:
+    Type: String
+    Default: 【クラスター名】
+  NginxELBName:
+    Type: String
+    Default: 【5. elb名】
+  NginxTaskDefinition:
+    Type: String
+    Default: 【2.Task Definitions名】:【2.で登録したバージョン】
+  NginxContainerName:
+    Type: String
+    Default: nginx
+  ECSRole:
+    Type: String
+    Default: 【3.ECS Role 名】
+Resources:
+  Nginx:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref 'Cluster'
+      DesiredCount: 1
+      LoadBalancers:
+        - ContainerName: !Ref 'NginxContainerName'
+          ContainerPort: '80'
+          LoadBalancerName: !Ref 'NginxELBName'
+      Role: !Ref 'ECSRole'
+      TaskDefinition: !Ref 'NginxTaskDefinition'

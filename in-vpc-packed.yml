@@ -2,12 +2,16 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   projectName:
     Type: String
-    Default: test4
+    Default: test2
     Description: Resource prefix
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
   eC2KeyPair:
     Type: AWS::EC2::KeyPair::KeyName
     Default: mackerel-test
+  ECSAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
 Resources:
   vpc:
     Type: AWS::EC2::VPC
@@ -252,6 +256,10 @@ Resources:
           FromPort: "22"
           ToPort: "22"
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: 0.0.0.0/0
   eC2:
     Type: AWS::EC2::Instance
     Properties:
@@ -268,3 +276,124 @@ Resources:
         - Key: Name
           Value:
             Fn::Sub: ${projectName}-ec2
+ECSCluster:
+  Type: AWS::ECS::Cluster
+  Properties:
+    ClusterName: test-cluster
+LogGroup:
+  Type: AWS::Logs::LogGroup
+  Properties:
+    LogGroupName: test-task-log-group
+    RetentionInDays: 1
+TaskDefinition:
+  Type: AWS::ECS::TaskDefinition
+  Properties:
+    RequiresCompatibilities:
+      - EC2
+    Cpu: "256"
+    Memory: "512"
+    ContainerDefinitions:
+      - Name: app
+        Image: busybox
+        EntryPoint:
+          - sh
+          - -c
+        Command:
+          - while true; do echo "{\"foo\":1000,\"time\":\"2019-05-09T20:00:00+09:00\"}";
+            sleep 10; done
+        Essential: "true"
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region: ap-northeast-1
+            awslogs-stream-prefix: app
+        Environment:
+          - Name: TZ
+            Value: Asia/Tokyo
+    Volumes:
+      - Name: varlog
+ECSService:
+  Type: AWS::ECS::Service
+  Properties:
+    Cluster:
+      Ref: ECSCluster
+    LaunchType: EC2
+    DesiredCount: 1
+    TaskDefinition:
+      Ref: TaskDefinition
+    ServiceName: test-service
+ECSAutoScalingGroup:
+  Type: AWS::AutoScaling::AutoScalingGroup
+  Properties:
+    AvailabilityZones:
+      Fn::GetAZs: ""
+    LaunchConfigurationName:
+      Ref: LaunchConfig
+    MinSize: "1"
+    MaxSize: "1"
+EC2Role:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ec2.amazonaws.com
+          Action:
+            - sts:AssumeRole
+    Path: /
+    Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Action:
+                - ecs:CreateCluster
+                - ecs:DeregisterContainerInstance
+                - ecs:DiscoverPollEndpoint
+                - ecs:Poll
+                - ecs:RegisterContainerInstance
+                - ecs:StartTelemetrySession
+                - ecs:Submit*
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "*"
+EC2InstanceProfile:
+  Type: AWS::IAM::InstanceProfile
+  Properties:
+    Path: /
+    Roles:
+      - Ref: EC2Role
+LaunchConfig:
+  Type: AWS::AutoScaling::LaunchConfiguration
+  Properties:
+    ImageId:
+      Ref: ECSAMI
+    IamInstanceProfile:
+      Ref: EC2InstanceProfile
+    UserData:
+      Fn::Base64:
+        Fn::Sub: "#!/bin/bash -xe
+
+          echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+
+          "
+    InstanceType: t2.small
+    BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          VolumeSize: "30"
+          VolumeType: gp2
+Outputs:
+  ALBURL:
+    Description: ALB DNS
+    Value:
+      Fn::Join:
+        - ""
+        - - http://
+          - Fn::GetAtt:
+              - publicLoadBalancer
+              - DNSName
