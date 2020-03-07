@@ -20,8 +20,18 @@ Resources:
       Parameters:
         projectName: !Ref projectName
 
+  EFS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 05_efs.yml
+      Parameters:
+        projectName: !Ref projectName
+        vpc: !GetAtt VPC.Outputs.vpc
+        subnet: !GetAtt VPC.Outputs.publicSubnet1
+
   SSHGate:
     Type: AWS::CloudFormation::Stack
+    DependsOn: EFS
     Properties:
       TemplateURL: 02_ssh_gate.yml
       Parameters:
@@ -29,6 +39,7 @@ Resources:
         vpc: !GetAtt VPC.Outputs.vpc
         eC2KeyPair: !Ref eC2KeyPair
         publicSubnet: !GetAtt VPC.Outputs.publicSubnet1
+        EFSFileSystem: !GetAtt EFS.Outputs.EFSFileSystem
 
   # Lambda:
   #   Type: AWS::CloudFormation::Stack
@@ -40,22 +51,22 @@ Resources:
   #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
   #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
   #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-  ECS:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: 04_ecs.yml
-      Parameters:
-        projectName: !Ref projectName
-        vpc: !GetAtt VPC.Outputs.vpc
-        publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
-        publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
-        privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
+  # ECS:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: 04_ecs.yml
+  #     Parameters:
+  #       projectName: !Ref projectName
+  #       vpc: !GetAtt VPC.Outputs.vpc
+  #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
+  #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
+  #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
 
 Outputs:
   SSHGateIP:
     Value: !GetAtt SSHGate.Outputs.SSHGateIP
-  LambdaURL:
-    Value: !GetAtt Lambda.Outputs.LambdaURL
-  NginxURL:
-    Value: !GetAtt ECS.Outputs.NginxURL
+  # LambdaURL:
+  #   Value: !GetAtt Lambda.Outputs.LambdaURL
+  # NginxURL:
+  #   Value: !GetAtt ECS.Outputs.NginxURL
   

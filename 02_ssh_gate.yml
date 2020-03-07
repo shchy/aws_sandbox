@@ -9,6 +9,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   publicSubnet:
     Type: String
+  EFSFileSystem:
+    Type: String
 
 Resources:
   ec2Securitygroup:
@@ -26,6 +28,16 @@ Resources:
           ToPort: "22"
           CidrIp: "0.0.0.0/0"
 
+  # EC2WaitHandle:
+  #   Type: AWS::CloudFormation::WaitConditionHandle
+  # EC2WaitCondition:
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   DependsOn: sshGate
+  #   Properties:
+  #     Handle: !Ref 'EC2WaitHandle'
+  #     Timeout: '300'
+
+
   sshGate:
     Type: "AWS::EC2::Instance"
     Properties:
@@ -36,6 +48,18 @@ Resources:
       SecurityGroupIds:
         - !Ref ec2Securitygroup
       SubnetId: !Ref publicSubnet
+      UserData: 
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          #/opt/aws/bin/cfn-init -s ${AWS::StackName} -r EC2 --region ${AWS::Region}
+          #yum install -y nfs-utils
+          yum install -y amazon-efs-utils
+          mkdir /mnt/public
+          echo "${EFSFileSystem}:/ /mnt/public efs tls,_netdev" >> /etc/fstab
+          mount -a -t efs defaults
+          chown ec2-user:ec2-user /mnt/public
+      #mount -t nfs4 -o nfsvers=4.1 ${EFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/public
+      #/opt/aws/bin/cfn-signal -e $? -r "efs mount complete" ${EC2WaitHandle} 
       Tags:
         - Key: Name
           Value: !Sub ${projectName}-ec2

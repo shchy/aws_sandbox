@@ -30,12 +30,19 @@ CFn:
         - nest
             - https://qiita.com/tyoshitake/items/ff08855d629ba4097125
 対象:
-    Elasticache:
-        - インメモリdb
+    ECS:
+        - コンテナ
+        - https://labs.septeni.co.jp/entry/2016/04/05/105249
+        - https://www.sambaiz.net/article/247/
+        - https://github.com/awslabs/ecs-refarch-continuous-deployment
         ☐ 構築はできた
-        ☐ 動かすサンプルはまだだけど、なんかそれっぽいグラフは出る
-    NLB:
-        - 低層のLB
+        
+    EFS: 
+        - NFS
+        - https://qiita.com/motchi0214/items/a22edddd12ccf4804523
+        - https://techracho.bpsinc.jp/kotetsu75/2018_08_15/60857
+        - https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/quickref-efs.html
+        ☐ できた
     ELB（CLB）:
         - RP
         ☐ 構築はできた
@@ -44,6 +51,12 @@ CFn:
             - Regionでamiを分岐できるサンプル
         - https://dev.classmethod.jp/cloud/aws/vpc-lambda-alb/
             - vpc内にWebを配置するサンプル
+    NLB:
+        - 低層のLB
+    Elasticache:
+        - インメモリdb
+        ☐ 構築はできた
+        ☐ 動かすサンプルはまだだけど、なんかそれっぽいグラフは出る
     SQS:
         - キュー
         ☐ あああ
@@ -55,20 +68,11 @@ CFn:
         kdf: 
             - 指定データをtailしてs3とかに格納	
             ☐ あああ
-    ECS:
-        - コンテナ
-        - https://labs.septeni.co.jp/entry/2016/04/05/105249
-        - https://www.sambaiz.net/article/247/
-        - https://github.com/awslabs/ecs-refarch-continuous-deployment
-        ☐ 構築はできた
     SES: 
         - メール
         ☐ あああ
     StepFunctions: 
         - ノードlambda
-        ☐ あああ
-    EFS: 
-        - NFS
         ☐ あああ
     Batch: 
         - 処理を指定したリソースで実行してくれるやつ

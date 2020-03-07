@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  projectName:
+    Type: String
+  vpc:
+    Type: String
+  subnet:
+    Type: String
+
+Resources:
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${projectName}-efs
+  EFSMoutTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref 'EFSFileSystem'
+      SecurityGroups:
+        - !Ref 'SecurityGroupFileSystem'
+      SubnetId: !Ref 'subnet'
+  SecurityGroupFileSystem:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for EFS
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '2049'
+          ToPort: '2049'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackName'
+      VpcId: !Ref 'vpc'
+  
+
+Outputs:
+  EFSFileSystem:
+    Value: !Ref EFSFileSystem
