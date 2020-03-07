@@ -4,7 +4,7 @@ Description: Mackerel Example Stacks
 Parameters:
   projectName:
     Type: String
-    Default: mackerel2
+    Default: mackerel
     Description: Resource prefix
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
   # ssh-key
@@ -51,60 +51,47 @@ Resources:
   #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
   #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
   #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-  # ECS:
+          Ref: projectName
+  ECS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/66b2af65e540fc1b773e017d71022583.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+  # CLB:
   #   Type: AWS::CloudFormation::Stack
   #   Properties:
-  #     TemplateURL: 04_ecs.yml
+  #     TemplateURL: 06_clb.yml
   #     Parameters:
   #       projectName: !Ref projectName
   #       vpc: !GetAtt VPC.Outputs.vpc
   #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
   #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
   #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-          Ref: projectName
-  CLB:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/5edb389c39afca8e644fc4859c50c171.template
-      Parameters:
-        projectName:
-          Ref: projectName
-        vpc:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.vpc
-        publicSubnet1:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.publicSubnet1
-        publicSubnet2:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.publicSubnet2
-        privateSubnet1:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.privateSubnet1
-  Elasticache:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/52dafd4c7067af539cb47a6860112d3e.template
-      Parameters:
-        projectName:
-          Ref: projectName
-        vpc:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.vpc
-        publicSubnet1:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.publicSubnet1
-        publicSubnet2:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.publicSubnet2
-        privateSubnet1:
+  # Elasticache:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: 07_elasticache.yml
+  #     Parameters:
+  #       projectName: !Ref projectName
+  #       vpc: !GetAtt VPC.Outputs.vpc
+  #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
+  #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
+  #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
 
           Fn::GetAtt:
           - VPC
@@ -114,11 +101,10 @@ Outputs:
   #   Value: !GetAtt SSHGate.Outputs.SSHGateIP
   # LambdaURL:
   #   Value: !GetAtt Lambda.Outputs.LambdaURL
-  # NginxURL:
-  #   Value: !GetAtt ECS.Outputs.NginxURL
-  CLBURL:
+  NginxURL:
     Value:
-
+  # CLBURL:
+  #   Value: !GetAtt CLB.Outputs.CLBURL
       Fn::GetAtt:
-      - CLB
-      - Outputs.CLBURL
+      - ECS
+      - Outputs.NginxURL
