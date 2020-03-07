@@ -12,7 +12,7 @@ CFn:
     - https://qiita.com/kei_q/items/6d5cc4563c232f5b785a
     - https://qiita.com/yasuhiroki/items/8463eed1c78123313a6f
     Package:
-    aws cloudformation package --template-file 00_main.yml --s3-bucket mackerel-bucket --output-template-file packed.yml
+    aws cloudformation package --template-file 00_main.yml --s3-bucket mackerel-bucket2 --output-template-file packed.yml
     作成コマンド:
     aws cloudformation create-stack --template-body file://packed.yml --stack-name mackerel --capabilities CAPABILITY_NAMED_IAM
     # lambda のRole作るときはこのオプションを付けるらしい --capabilities CAPABILITY_NAMED_IAM
@@ -67,8 +67,21 @@ CFn:
         - http://blog.serverworks.co.jp/tech/2017/09/08/nlb/
     SQS:
         - キュー
+        ☐ 08_sqs.yml
+        - https://docs.aws.amazon.com/ja_jp/sns/latest/dg/SendMessageToSQS.cloudformation.html
+    SES: 
+        - メール
+        ☐ 作る必要がない
+        ☐ メアドの認証して送信すればメトリクス取得される
+        ☐ メアドの認証はcfn未対応
+        - https://stackoverflow.com/questions/47026560/do-aws-support-ses-in-cloudformation
+        - https://qiita.com/ysti/items/9eeca4179aab5ea847b5
+    StepFunctions: 
+        - ノードlambda
         ☐ あああ
-        ☐ 
+    Batch: 
+        - 処理を指定したリソースで実行してくれるやつ
+        ☐ あああ
     Kinesis:
         kds: 
             - データ突っ込んでlambdaで分析
@@ -76,14 +89,5 @@ CFn:
         kdf: 
             - 指定データをtailしてs3とかに格納	
             ☐ あああ
-    SES: 
-        - メール
-        ☐ あああ
-    StepFunctions: 
-        - ノードlambda
-        ☐ あああ
-    Batch: 
-        - 処理を指定したリソースで実行してくれるやつ
-        ☐ あああ
 
 

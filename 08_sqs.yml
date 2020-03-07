@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  projectName:
+    Type: String
+  vpc:
+    Type: String
+  publicSubnet1:
+    Type: String
+  publicSubnet2:
+    Type: String
+  privateSubnet1:
+    Type: String
+  MyPublishUserPassword:
+    NoEcho: 'true'
+    Type: String
+    Description: Password for the IAM user MyPublishUser
+    MinLength: '1'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+  MyQueueUserPassword:
+    NoEcho: 'true'
+    Type: String
+    Description: Password for the IAM user MyQueueUser
+    MinLength: '1'
+    MaxLength: '41'
+    ConstraintDescription: password must be between 1 and 41 characters.
+Resources:
+  MySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !GetAtt 'MyQueue1.Arn'
+          Protocol: sqs
+        - Endpoint: !GetAtt 'MyQueue2.Arn'
+          Protocol: sqs
+  MyQueue1:
+    Type: AWS::SQS::Queue
+  MyQueue2:
+    Type: AWS::SQS::Queue
+  MyPublishUser:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref 'MyPublishUserPassword'
+  MyPublishUserKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref 'MyPublishUser'
+  MyPublishTopicGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      Policies:
+        - PolicyName: MyTopicGroupPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref 'MySNSTopic'
+  AddUserToMyPublishTopicGroup:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref 'MyPublishTopicGroup'
+      Users:
+        - !Ref 'MyPublishUser'
+  MyQueueUser:
+    Type: AWS::IAM::User
+    Properties:
+      LoginProfile:
+        Password: !Ref 'MyQueueUserPassword'
+  MyQueueUserKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref 'MyQueueUser'
+  MyRDMessageQueueGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      Policies:
+        - PolicyName: MyQueueGroupPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:ReceiveMessage
+                Resource:
+                  - !GetAtt 'MyQueue1.Arn'
+                  - !GetAtt 'MyQueue2.Arn'
+  AddUserToMyQueueGroup:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref 'MyRDMessageQueueGroup'
+      Users:
+        - !Ref 'MyQueueUser'
+  MyQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Id: MyQueuePolicy
+        Statement:
+          - Sid: Allow-SendMessage-To-Both-Queues-From-SNS-Topic
+            Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - sqs:SendMessage
+            Resource: '*'
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref 'MySNSTopic'
+      Queues:
+        - !Ref 'MyQueue1'
+        - !Ref 'MyQueue2'
+Outputs:
+  MySNSTopicTopicARN:
+    Value: !Ref 'MySNSTopic'
+    Description: Topic ARN of newly created SNS topic
+  MyQueue1Info:
+    Value: !Join
+      - ' '
+      - - 'ARN:'
+        - !GetAtt 'MyQueue1.Arn'
+        - 'URL:'
+        - !Ref 'MyQueue1'
+    Description: Queue1 details
+  MyQueue2Info:
+    Value: !Join
+      - ' '
+      - - 'ARN:'
+        - !GetAtt 'MyQueue2.Arn'
+        - 'URL:'
+        - !Ref 'MyQueue2'
+    Description: Queue2 details
+  MyPublishUserInfo:
+    Description: Information for publisher
+    Value: !Join
+      - ' '
+      - - 'ARN:'
+        - !GetAtt 'MyPublishUser.Arn'
+        - 'Access Key:'
+        - !Ref 'MyPublishUserKey'
+        - 'Secret Key:'
+        - !GetAtt 'MyPublishUserKey.SecretAccessKey'
+  MyQueueUserInfo:
+    Description: Information for consumer
+    Value: !Join
+      - ' '
+      - - 'ARN:'
+        - !GetAtt 'MyQueueUser.Arn'
+        - 'Access Key:'
+        - !Ref 'MyQueueUserKey'
+        - 'Secret Key:'
+        - !GetAtt 'MyQueueUserKey.SecretAccessKey'

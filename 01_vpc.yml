@@ -28,7 +28,7 @@ Resources:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1a"
+      AvailabilityZone: "us-east-1a"
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: "true"
       Tags:
@@ -38,7 +38,7 @@ Resources:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1c"
+      AvailabilityZone: "us-east-1c"
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: "true"
       Tags:
@@ -48,7 +48,7 @@ Resources:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref vpc
-      AvailabilityZone: "ap-southeast-1a"
+      AvailabilityZone: "us-east-1a"
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: "true"
       Tags:

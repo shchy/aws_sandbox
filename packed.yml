@@ -16,46 +16,54 @@ Resources:
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/4a80c3b47a37057dfea8b0dc8b3dcb8a.template
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/673ce6d52e09966c85f7f3e8e714e7b3.template
       Parameters:
         projectName:
 
-  # EFS:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: 05_efs.yml
-  #     Parameters:
-  #       projectName: !Ref projectName
-  #       vpc: !GetAtt VPC.Outputs.vpc
-  #       subnet: !GetAtt VPC.Outputs.publicSubnet1
-
-  # SSHGate:
-  #   Type: AWS::CloudFormation::Stack
-  #   DependsOn: EFS
-  #   Properties:
-  #     TemplateURL: 02_ssh_gate.yml
-  #     Parameters:
-  #       projectName: !Ref projectName
-  #       vpc: !GetAtt VPC.Outputs.vpc
-  #       eC2KeyPair: !Ref eC2KeyPair
-  #       publicSubnet: !GetAtt VPC.Outputs.publicSubnet1
-  #       EFSFileSystem: !GetAtt EFS.Outputs.EFSFileSystem
-
-  # Lambda:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: 03_lambda.yml
-  #     Parameters:
-  #       projectName: !Ref projectName
-  #       vpc: !GetAtt VPC.Outputs.vpc
-  #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
-  #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
-  #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
           Ref: projectName
-  ECS:
+  EFS:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/0473bf928167c838821811d786548ee0.template
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/7f7775b7efeb7ff3d4d70fa6bfad927b.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        subnet:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+  SSHGate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: EFS
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/8bd7e70108873ae834235822bdcefd03.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        eC2KeyPair:
+          Ref: eC2KeyPair
+        publicSubnet:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        EFSFileSystem:
+
+          Fn::GetAtt:
+          - EFS
+          - Outputs.EFSFileSystem
+  Lambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/d12bd184882e1d434058d32cf98634df.template
       Parameters:
         projectName:
           Ref: projectName
@@ -72,39 +80,126 @@ Resources:
           - VPC
           - Outputs.publicSubnet2
         privateSubnet1:
-  # CLB:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: 06_clb.yml
-  #     Parameters:
-  #       projectName: !Ref projectName
-  #       vpc: !GetAtt VPC.Outputs.vpc
-  #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
-  #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
-  #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-  # Elasticache:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: 07_elasticache.yml
-  #     Parameters:
-  #       projectName: !Ref projectName
-  #       vpc: !GetAtt VPC.Outputs.vpc
-  #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
-  #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
-  #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
 
           Fn::GetAtt:
           - VPC
           - Outputs.privateSubnet1
+  ECS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/0473bf928167c838821811d786548ee0.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+  CLB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/033a1db45b43a63b56ba0224b033188b.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+  Elasticache:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/2c049cb96ad7fabe907a0df814521a4a.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+  SQS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/c6cdd27cf53cb2dddb6426190d442d5c.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+        MyPublishUserPassword: qwerty1
+        MyQueueUserPassword: qwerty2
+
 Outputs:
-  # SSHGateIP:
-  #   Value: !GetAtt SSHGate.Outputs.SSHGateIP
-  # LambdaURL:
-  #   Value: !GetAtt Lambda.Outputs.LambdaURL
+  SSHGateIP:
+    Value:
+      Fn::GetAtt:
+      - SSHGate
+      - Outputs.SSHGateIP
+  LambdaURL:
+    Value:
+      Fn::GetAtt:
+      - Lambda
+      - Outputs.LambdaURL
   NginxURL:
     Value:
-  # CLBURL:
-  #   Value: !GetAtt CLB.Outputs.CLBURL
       Fn::GetAtt:
       - ECS
       - Outputs.NginxURL
+  CLBURL:
+    Value:
+
+      Fn::GetAtt:
+      - CLB
+      - Outputs.CLBURL

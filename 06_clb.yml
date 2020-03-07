@@ -15,6 +15,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable HTTP access on the configured port
+      VpcId: !Ref vpc
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: "80"
@@ -23,7 +24,7 @@ Resources:
   LaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: ami-e90dc68a
+      ImageId: ami-08111162
       InstanceType: t2.micro
       SecurityGroups:
         - !Ref "InstanceSecurityGroup"
@@ -114,7 +115,11 @@ Resources:
         PauseTime: PT15M
         WaitOnResourceSignals: "true"
     Properties:
-      AvailabilityZones: !GetAZs ""
+      # AvailabilityZones: 
+      #   - us-east-1a
+      VPCZoneIdentifier:
+        - !Ref publicSubnet1
+        - !Ref publicSubnet2
       LaunchConfigurationName: !Ref "LaunchConfig"
       MinSize: "2"
       MaxSize: "4"
@@ -123,7 +128,13 @@ Resources:
   ElasticLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
-      AvailabilityZones: !GetAZs ""
+      # AvailabilityZones: 
+      #   - us-east-1a
+      Subnets:
+        - !Ref publicSubnet1
+        - !Ref publicSubnet2
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
       CrossZone: "true"
       Listeners:
         - LoadBalancerPort: "80"

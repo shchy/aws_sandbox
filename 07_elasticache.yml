@@ -11,30 +11,42 @@ Parameters:
   privateSubnet1:
     Type: String
 Resources:
+  ECacheSubnet:
+    Type: 'AWS::ElastiCache::SubnetGroup'
+    Properties:
+      CacheSubnetGroupName: !Sub ${projectName}-elasticache-subnet-group
+      Description: elasticache-subnet-group
+      SubnetIds:
+        - !Ref publicSubnet1
+        - !Ref publicSubnet2
   ECacheMemd:
     Type: "AWS::ElastiCache::CacheCluster"
     Properties:
       CacheNodeType: cache.t2.micro
-      CacheSecurityGroupNames:
-        - !Ref MemCacheSecurityGroup
-      ClusterName: memcached-cluster-01
+      # CacheSecurityGroupNames:
+      #   - !Ref MemCacheSecurityGroup
+      CacheSubnetGroupName: !Ref ECacheSubnet
+      ClusterName: !Sub ${projectName}-memcached-cluster-01
       Engine: memcached
-      NumCacheNodes: 2
+      NumCacheNodes: 1
       Port: 11211
       PreferredMaintenanceWindow: "sun:17:00-sun:20:00"
-  MemCacheSecurityGroup:
-    Type: AWS::ElastiCache::SecurityGroup
-    Properties:
-      Description: MemCacheSG
-  MemCacheSecurityGroupIngress:
-    Type: AWS::ElastiCache::SecurityGroupIngress
-    Properties:
-      CacheSecurityGroupName: !Ref MemCacheSecurityGroup
-      EC2SecurityGroupName: !Ref InstanceSecurityGroup
+      VpcSecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+  # MemCacheSecurityGroup:
+  #   Type: AWS::ElastiCache::SecurityGroup
+  #   Properties:
+  #     Description: MemCacheSG
+  # MemCacheSecurityGroupIngress:
+  #   Type: AWS::ElastiCache::SecurityGroupIngress
+  #   Properties:
+  #     CacheSecurityGroupName: !Ref MemCacheSecurityGroup
+  #     EC2SecurityGroupName: !Ref InstanceSecurityGroup
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: MemCacheSG
+      VpcId: !Ref vpc
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: "11211"
