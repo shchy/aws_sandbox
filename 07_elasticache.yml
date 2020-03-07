@@ -1,4 +1,15 @@
 AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  projectName:
+    Type: String
+  vpc:
+    Type: String
+  publicSubnet1:
+    Type: String
+  publicSubnet2:
+    Type: String
+  privateSubnet1:
+    Type: String
 Resources:
   ECacheMemd:
     Type: "AWS::ElastiCache::CacheCluster"

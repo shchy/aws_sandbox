@@ -4,7 +4,7 @@ Description: Mackerel Example Stacks
 Parameters:
   projectName:
     Type: String
-    Default: mackerel
+    Default: mackerel2
     Description: "Resource prefix"
     AllowedPattern: "^[a-zA-Z][a-zA-Z0-9]*"
   # ssh-key
@@ -65,6 +65,16 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: 06_clb.yml
+      Parameters:
+        projectName: !Ref projectName
+        vpc: !GetAtt VPC.Outputs.vpc
+        publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
+        publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
+        privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
+  Elasticache:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 07_elasticache.yml
       Parameters:
         projectName: !Ref projectName
         vpc: !GetAtt VPC.Outputs.vpc
