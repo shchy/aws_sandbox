@@ -32,16 +32,18 @@ CFn:
 対象:
     ECS:
         - コンテナ
+        ☐ 04_ecs.yml
         - https://labs.septeni.co.jp/entry/2016/04/05/105249
         - https://www.sambaiz.net/article/247/
         - https://github.com/awslabs/ecs-refarch-continuous-deployment
-        ☐ 04_ecs.yml
+        
     EFS: 
         - NFS
+        ☐ 05_efs.yml
         - https://qiita.com/motchi0214/items/a22edddd12ccf4804523
         - https://techracho.bpsinc.jp/kotetsu75/2018_08_15/60857
         - https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/quickref-efs.html
-        ☐ 05_efs.yml
+        
     ELB（CLB）:
         - RP
         ☐ 06_clb.yml
@@ -56,7 +58,13 @@ CFn:
         ☐ 動かすサンプルはまだだけど、なんかそれっぽいグラフは出る
     NLB:
         - 低層のLB
+        ☐ 04_ecs.yml
         - https://www.qoosky.io/techs/72b56447a3
+        - https://qiita.com/itsubaki/items/89fd7bc718a059013d53
+        - https://tech.unifa-e.com/entry/2018/01/25/150322
+        - http://iga-ninja.hatenablog.com/entry/2017/10/15/010946
+        - https://kawabatas.hatenablog.com/entry/2019/03/06/133911
+        - http://blog.serverworks.co.jp/tech/2017/09/08/nlb/
     SQS:
         - キュー
         ☐ あああ

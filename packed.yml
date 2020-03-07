@@ -55,7 +55,7 @@ Resources:
   ECS:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/66b2af65e540fc1b773e017d71022583.template
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/0473bf928167c838821811d786548ee0.template
       Parameters:
         projectName:
           Ref: projectName
