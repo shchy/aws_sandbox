@@ -101,6 +101,7 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
+      Type: network
       Subnets: 
         - !Ref publicSubnet1
         - !Ref publicSubnet2

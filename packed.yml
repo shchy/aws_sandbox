@@ -41,7 +41,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: EFS
     Properties:
-      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/719cbfc1d26f286ad589e3a9c7fad325.template
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/f6f6ddac9d10065889b0023aa7ec2f8c.template
       Parameters:
         projectName:
           Ref: projectName
@@ -77,10 +77,33 @@ Resources:
   #       publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
   #       publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
   #       privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-
           Fn::GetAtt:
           - EFS
           - Outputs.EFSFileSystem
+  CLB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.ap-southeast-1.amazonaws.com/mackerel-bucket/e85184978a96db5490161136bff613d0.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
 Outputs:
   SSHGateIP:
     Value:
