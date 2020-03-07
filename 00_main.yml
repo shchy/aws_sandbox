@@ -96,6 +96,13 @@ Resources:
         privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
         MyPublishUserPassword: 'qwerty1'
         MyQueueUserPassword: 'qwerty2'
+  
+  STEP:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 09_stepFunc.yml
+      Parameters:
+        projectName: !Ref projectName
 
 Outputs:
   SSHGateIP:

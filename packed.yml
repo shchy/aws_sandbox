@@ -180,7 +180,14 @@ Resources:
           - Outputs.privateSubnet1
         MyPublishUserPassword: qwerty1
         MyQueueUserPassword: qwerty2
+  STEP:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-1.amazonaws.com/mackerel-bucket2/a328311618ef7a43e9af9e110b3c7363.template
+      Parameters:
+        projectName:
 
+          Ref: projectName
 Outputs:
   SSHGateIP:
     Value:
