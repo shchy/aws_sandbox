@@ -83,12 +83,16 @@ CFn:
     Batch: 
         - 処理を指定したリソースで実行してくれるやつ
         ☐ あああ
+        - https://qiita.com/Esfahan/items/8774afff63ee98b05309
     Kinesis:
         kds: 
             - データ突っ込んでlambdaで分析
             ☐ あああ
+            - https://dev.classmethod.jp/cloud/aws/kinesis-data-generator/
+            - https://qiita.com/leo-mon/items/6cbee3f456e1452a9972
         kdf: 
             - 指定データをtailしてs3とかに格納	
             ☐ あああ
+            - https://dev.classmethod.jp/cloud/aws/cloudformation-waf-log-kinesis/
 
 
