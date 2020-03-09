@@ -82,7 +82,7 @@ CFn:
         - https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/tutorial-lambda-state-machine-cloudformation.html#lambda-state-machine-cfn-step-2
     Batch: 
         - 処理を指定したリソースで実行してくれるやつ
-        ☐ あああ
+        ☐ 10_batch.yml
         - https://qiita.com/Esfahan/items/8774afff63ee98b05309
     Kinesis:
         kds: 

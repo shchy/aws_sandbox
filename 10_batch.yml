@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Build AWS Batch environment
+
+Parameters:
+  vpc:
+    Type: String
+  projectName:
+    Type: String
+  publicSubnet1:
+    Type: String
+  KeyPair:
+    Description: key pair
+    Type: String
+    Default: sample_key
+
+Resources:
+  ecsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonECS_FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Path: "/"
+  # Set InstanceProfile
+  ecsInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+        - !Ref ecsInstanceRole
+
+  # AWS Batchを実行するrole
+  AWSBatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - batch.amazonaws.com
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+      Path: "/service-role/"
+
+  ####### ComputeEnvironment #######
+  SampleComputeEnv:
+    Type: "AWS::Batch::ComputeEnvironment"
+    Properties:
+      Type: MANAGED
+      ServiceRole: !GetAtt AWSBatchServiceRole.Arn
+      ComputeEnvironmentName: !Sub ${projectName}-batch-compute-env
+      ComputeResources:
+        Ec2KeyPair: !Ref KeyPair
+        MaxvCpus: 256
+        MinvCpus: 0
+        DesiredvCpus: 1
+        SecurityGroupIds:
+          - !Ref Securitygroup
+        Type: EC2
+        Subnets:
+          - !Ref publicSubnet1
+        InstanceRole: !GetAtt ecsInstanceProfile.Arn
+        InstanceTypes:
+          - m3.medium
+        Tags: { "Name": "Batch Instance - sample" }
+      State: ENABLED
+
+  Securitygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${projectName}-batch-sg
+      GroupDescription: !Sub ${projectName}-batch-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${projectName}-batch-sg
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+
+  SampleJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref SampleComputeEnv
+      State: ENABLED
+      Priority: 1
+      JobQueueName: !Sub ${projectName}-sample-batch-queue
+
+  SampleJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      JobDefinitionName: !Sub ${projectName}-sample-batch-definition
+      ContainerProperties:
+        # Command:
+        #   - sh
+        #   - /usr/local/init.sh
+        Memory: 4048
+        Vcpus: 2
+        Image: alpine:3.6
+      RetryStrategy:
+        Attempts: 1

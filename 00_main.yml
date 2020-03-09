@@ -51,7 +51,7 @@ Resources:
         publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
         publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
         privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-  
+
   ECS:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -83,7 +83,7 @@ Resources:
         publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
         publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
         privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-  
+
   SQS:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -94,9 +94,9 @@ Resources:
         publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
         publicSubnet2: !GetAtt VPC.Outputs.publicSubnet2
         privateSubnet1: !GetAtt VPC.Outputs.privateSubnet1
-        MyPublishUserPassword: 'qwerty1'
-        MyQueueUserPassword: 'qwerty2'
-  
+        MyPublishUserPassword: "qwerty1"
+        MyQueueUserPassword: "qwerty2"
+
   STEP:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -104,6 +104,15 @@ Resources:
       Parameters:
         projectName: !Ref projectName
 
+  BATCH:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 10_batch.yml
+      Parameters:
+        projectName: !Ref projectName
+        KeyPair: !Ref eC2KeyPair
+        publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
+        vpc: !GetAtt VPC.Outputs.vpc
 Outputs:
   SSHGateIP:
     Value: !GetAtt SSHGate.Outputs.SSHGateIP
@@ -113,5 +122,3 @@ Outputs:
     Value: !GetAtt ECS.Outputs.NginxURL
   CLBURL:
     Value: !GetAtt CLB.Outputs.CLBURL
-  
-  
