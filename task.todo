@@ -87,7 +87,8 @@ CFn:
     Kinesis:
         kds: 
             - データ突っ込んでlambdaで分析
-            ☐ あああ
+            ☐ 11_kds.yml
+            - https://qiita.com/leo-mon/items/6cbee3f456e1452a9972
             - https://dev.classmethod.jp/cloud/aws/kinesis-data-generator/
             - https://qiita.com/leo-mon/items/6cbee3f456e1452a9972
         kdf: 
