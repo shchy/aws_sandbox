@@ -113,6 +113,16 @@ Resources:
         KeyPair: !Ref eC2KeyPair
         publicSubnet1: !GetAtt VPC.Outputs.publicSubnet1
         vpc: !GetAtt VPC.Outputs.vpc
+
+  KDS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: 11_kds.yml
+      Parameters:
+        projectName: !Ref projectName
+        KeyName: !Ref eC2KeyPair
+        vpc: !GetAtt VPC.Outputs.vpc
+        subnet: !GetAtt VPC.Outputs.publicSubnet1
 Outputs:
   SSHGateIP:
     Value: !GetAtt SSHGate.Outputs.SSHGateIP

@@ -17,20 +17,20 @@ Resources:
       Parameters:
         projectName:
           Ref: projectName
-  BATCH:
+  KDS:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/2d5a5d57025c4d8a85350b93dbcd6b60.template
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/9c23bc46f915c9c56f10b9c2ef07facd.template
       Parameters:
         projectName:
           Ref: projectName
-        KeyPair:
+        KeyName:
           Ref: eC2KeyPair
-        publicSubnet1:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.publicSubnet1
         vpc:
           Fn::GetAtt:
           - VPC
           - Outputs.vpc
+        subnet:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
