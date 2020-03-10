@@ -94,6 +94,48 @@ Resources:
       GatewayId: !Ref internetGateway
       RouteTableId: !Ref publicRouteTable
 
+  VpcFlowLogs:
+    Type: "AWS::EC2::FlowLog"
+    Properties:
+      ResourceType: "VPC"
+      ResourceId: !Ref vpc
+      TrafficType: ALL
+      DeliverLogsPermissionArn: !GetAtt VpcFlowLogsIamRole.Arn
+      LogGroupName: !Ref VpcFlowLogsLogGroup
+
+  VpcFlowLogsLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub ${projectName}-vpc-flowlogs
+      RetentionInDays: 30
+
+  VpcFlowLogsIamRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub ${projectName}-flowlogs-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "vpc-flow-logs.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub ${projectName}-flowlogs-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
+                Resource: "*"
+
 Outputs:
   vpc:
     Value: !Ref vpc
@@ -103,3 +145,5 @@ Outputs:
     Value: !Ref publicSubnet2
   privateSubnet1:
     Value: !Ref privateSubnet1
+  VpcLogGroup:
+    Value: !Ref VpcFlowLogsLogGroup

@@ -93,7 +93,9 @@ CFn:
             - https://qiita.com/leo-mon/items/6cbee3f456e1452a9972
         kdf: 
             - 指定データをtailしてs3とかに格納	
-            ☐ あああ
+            ☐ 12_kdf.yml
+            - https://dev.classmethod.jp/cloud/aws/cloudwatchlogs-firehose-s3/
+            - https://qiita.com/takachan/items/97ae176a0339509a3908
             - https://dev.classmethod.jp/cloud/aws/cloudformation-waf-log-kinesis/
 
 

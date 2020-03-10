@@ -8,15 +8,98 @@ Parameters:
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
   eC2KeyPair:
     Type: AWS::EC2::KeyPair::KeyName
-    Default: mackerel-key
+    Default: mackerel-key2
 Resources:
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/75b1e7a02108dd5fecfc6b51a1a77e77.template
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/88f2eadfc9660298dd26aa0f55d1aaba.template
       Parameters:
         projectName:
           Ref: projectName
+  EFS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/09033e5b511eb3d64892b62edef1242d.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        subnet:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+  SSHGate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: EFS
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/7dbc2eab290aa09b8c7b74d6ac16327d.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        eC2KeyPair:
+          Ref: eC2KeyPair
+        publicSubnet:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        EFSFileSystem:
+          Fn::GetAtt:
+          - EFS
+          - Outputs.EFSFileSystem
+  ECS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/23e9134b38dd37f1c234847f4e0271cb.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
+  CLB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/d69f26a8bc41a61b6a26830a9b9fc860.template
+      Parameters:
+        projectName:
+          Ref: projectName
+        vpc:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.vpc
+        publicSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet1
+        publicSubnet2:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.publicSubnet2
+        privateSubnet1:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.privateSubnet1
   KDS:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -34,3 +117,29 @@ Resources:
           Fn::GetAtt:
           - VPC
           - Outputs.publicSubnet1
+  KDF:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/mackerel-bucket2/3acb9f8840773a017812a8042420ece0.template
+      Parameters:
+        LogGroup:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.VpcLogGroup
+        Bucket: mackerel-bucket2
+Outputs:
+  SSHGateIP:
+    Value:
+      Fn::GetAtt:
+      - SSHGate
+      - Outputs.SSHGateIP
+  NginxURL:
+    Value:
+      Fn::GetAtt:
+      - ECS
+      - Outputs.NginxURL
+  CLBURL:
+    Value:
+      Fn::GetAtt:
+      - CLB
+      - Outputs.CLBURL
